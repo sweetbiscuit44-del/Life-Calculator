@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Life Calculator 💤</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f9f7f0;
+      color: #333;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+      text-align: center;
+    }
+    h1 {
+      color: #4a6fa5;
+    }
+    select, input, button {
+      padding: 8px;
+      margin: 5px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 16px;
+    }
+    .time-select {
+      display: inline-block;
+      margin: 0 4px;
+    }
+    .clock {
+      font-size: 2.5em;
+      font-weight: bold;
+      margin: 20px 0;
+      color: #2c3e50;
+    }
+    .result, .tip {
+      background: #eef5ff;
+      padding: 15px;
+      border-radius: 10px;
+      margin: 15px 0;
+    }
+    .tip {
+      background: #fff8e1;
+      color: #5d4037;
+    }
+    footer {
+      margin-top: 30px;
+      font-style: italic;
+      color: #777;
+    }
+    .heart {
+      color: #e74c3c;
+    }
+    .paypal-button {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>💤 Life Calculator</h1>
+
+  <div class="clock" id="digitalClock">00:00:00</div>
+
+  <p><strong>Bedtime:</strong></p>
+  <div>
+    <select id="bedHour" class="time-select"></select> :
+    <select id="bedMinute" class="time-select"></select>
+  </div>
+
+  <p><strong>Wake-up time:</strong></p>
+  <div>
+    <select id="wakeHour" class="time-select"></select> :
+    <select id="wakeMinute" class="time-select"></select>
+  </div>
+
+  <p><strong>Your age:</strong> <input type="number" id="age" min="1" max="120" value="25"></p>
+  <button onclick="calculateSleep()">Calculate Sleep</button>
+
+  <div class="tip" id="sleepTip">😴 Sleeping tip will appear here...</div>
+  <div class="result" id="result">Enter your details and click "Calculate Sleep"</div>
+
+  <footer>
+    <p>Created by Sweet Biscuit44 <span class="heart">❤️</span><br>
+    With love 💖 — This application was made with pure HTML.<br>
+    Your support is highly appreciated!</p>
+    <div class="paypal-button">
+      <a href="https://www.paypal.com/paypalme/sweetbiscuit44" target="_blank">
+        <img src="https://www.paypalobjects.com/webstatic/en_US/i/buttons/ppcredit-logo-small.png" alt="Support via PayPal" style="height:30px;">
+      </a>
+    </div>
+  </footer>
+
+  <audio id="alarmSound" preload="auto">
+    <source src="data:audio/mpeg;base64,SUQzBAAAAAABEVRYWFgAAAAtAAADY29tbWVudABCaWdTb3VuZEJhbmsuY29tIC8gTGFTb25vdGhlcXVlLm9yZwBURU5DAAAAHQAAA1N3aXRjaCBQbHVzIMKpIE5DSCBTb2Z0d2FyZQBUSVQyAAAABgAAAzIyMzUAVFNTRQAAAA8AAANMYXZmNTcuODMuMTAwAAAAAAAAAAAAAAD/80DEAAAAA0gAAAAATEFNRTMuMTAwVVVVVVVVVVVVVUxBTUUzLjEwMFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVf/zQsRbAAADSAAAAABVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVf/zQMSkAAADSAAAAABVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV" type="audio/mpeg">
+  </audio>
+
+  <script>
+    // Populate hour (0–23) and minute (0–59) dropdowns
+    function populateTimeSelectors() {
+      const hours = Array.from({length: 24}, (_, i) => String(i).padStart(2, '0'));
+      const minutes = Array.from({length: 60}, (_, i) => String(i).padStart(2, '0'));
+
+      const bedHourSel = document.getElementById('bedHour');
+      const bedMinSel = document.getElementById('bedMinute');
+      const wakeHourSel = document.getElementById('wakeHour');
+      const wakeMinSel = document.getElementById('wakeMinute');
+
+      hours.forEach(h => {
+        const opt1 = document.createElement('option');
+        opt1.value = h;
+        opt1.textContent = h;
+        const opt2 = opt1.cloneNode(true);
+        bedHourSel.appendChild(opt1);
+        wakeHourSel.appendChild(opt2);
+      });
+
+      minutes.forEach(m => {
+        const opt1 = document.createElement('option');
+        opt1.value = m;
+        opt1.textContent = m;
+        const opt2 = opt1.cloneNode(true);
+        bedMinSel.appendChild(opt1);
+        wakeMinSel.appendChild(opt2);
+      });
+
+      // Set defaults: Bed 22:00, Wake 06:00
+      bedHourSel.value = '22';
+      bedMinSel.value = '00';
+      wakeHourSel.value = '06';
+      wakeMinSel.value = '00';
+    }
+
+    // Digital Clock
+    function updateClock() {
+      const now = new Date();
+      const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      document.getElementById('digitalClock').textContent = timeString;
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    // Sleep Tips
+    const sleepTips = [
+      "🛌 Aim for 7–9 hours—your brain clears toxins during deep sleep!",
+      "🌙 Avoid screens 1 hour before bed—blue light delays melatonin.",
+      "☕ Cut off caffeine by 2 PM—it can linger in your system for 6+ hours.",
+      "🛌 Keep your bedroom cool (~18°C/65°F) for optimal sleep quality.",
+      "🧘 Try deep breathing: Inhale 4s, hold 4s, exhale 6s—calms your nervous system.",
+      "🛏️ Go to bed and wake up at the same time—even on weekends!",
+      "💧 Stay hydrated, but reduce fluids 1 hour before bed to avoid nighttime trips.",
+      "📖 Reading a physical book (not a tablet) helps signal it’s time to wind down.",
+      "🛌 Your mattress matters—replace it every 7–10 years.",
+      "💤 Short naps (<30 min) can boost alertness—long ones may disrupt night sleep."
+    ];
+
+    // Sleep Recommendation by Age
+    function recommendedSleep(age) {
+      if (age < 1) return "12–16 hours (including naps)";
+      if (age <= 2) return "11–14 hours (including naps)";
+      if (age <= 5) return "10–13 hours (including naps)";
+      if (age <= 12) return "9–12 hours";
+      if (age <= 18) return "8–10 hours";
+      if (age <= 64) return "7–9 hours";
+      return "7–8 hours";
+    }
+
+    // Calculate sleep duration in hours (handles overnight)
+    function sleepDuration(bedH, bedM, wakeH, wakeM) {
+      const bedT = new Date(2000, 0, 1, bedH, bedM);
+      let wakeT = new Date(2000, 0, 1, wakeH, wakeM);
+      if (wakeT <= bedT) wakeT.setDate(wakeT.getDate() + 1);
+      return (wakeT - bedT) / (1000 * 60 * 60);
+    }
+
+    let lastAlarmMinute = null;
+    function checkAlarm(wakeH, wakeM) {
+      const now = new Date();
+      const nowH = now.getHours();
+      const nowM = now.getMinutes();
+      if (nowH === wakeH && nowM === wakeM) {
+        const key = `${nowH}:${nowM}`;
+        if (key !== lastAlarmMinute) {
+          const sound = document.getElementById('alarmSound');
+          sound.play().catch(e => console.log("Alarm blocked:", e));
+          alert("⏰ Good morning! Time to wake up!");
+          lastAlarmMinute = key;
+        }
+      }
+    }
+
+    function calculateSleep() {
+      const bedH = parseInt(document.getElementById('bedHour').value);
+      const bedM = parseInt(document.getElementById('bedMinute').value);
+      const wakeH = parseInt(document.getElementById('wakeHour').value);
+      const wakeM = parseInt(document.getElementById('wakeMinute').value);
+      const age = parseInt(document.getElementById('age').value);
+
+      if (isNaN(age) || age < 1) {
+        document.getElementById('result').innerHTML = "Please enter a valid age.";
+        return;
+      }
+
+      const daily = sleepDuration(bedH, bedM, wakeH, wakeM);
+      const weekly = daily * 7;
+      const monthly = daily * 30.4;
+      const yearly = daily * 365.25;
+
+      const rec = recommendedSleep(age);
+      const randomTip = sleepTips[Math.floor(Math.random() * sleepTips.length)];
+
+      const bedTimeStr = `${String(bedH).padStart(2, '0')}:${String(bedM).padStart(2, '0')}`;
+      const wakeTimeStr = `${String(wakeH).padStart(2, '0')}:${String(wakeM).padStart(2, '0')}`;
+
+      document.getElementById('sleepTip').textContent = randomTip;
+      document.getElementById('result').innerHTML = `
+        <strong>Your Sleep Stats:</strong><br>
+        🛌 Per day: <strong>${daily.toFixed(1)} hours</strong><br>
+        📅 Per week: <strong>${weekly.toFixed(1)} hours</strong><br>
+        📆 Per month: <strong>${monthly.toFixed(1)} hours</strong><br>
+        📅 Per year: <strong>${yearly.toFixed(1)} hours</strong><br><br>
+        👶 Based on your age (${age}), you should get:<br>
+        <strong>${rec}</strong><br><br>
+        🕰️ Alarm set for: <strong>${wakeTimeStr}</strong>
+      `;
+
+      // Set alarm check every minute
+      setInterval(() => checkAlarm(wakeH, wakeM), 60000);
+      checkAlarm(wakeH, wakeM);
+    }
+
+    // Initialize time selectors on load
+    window.onload = populateTimeSelectors;
+  </script>
+</body>
+</html>
